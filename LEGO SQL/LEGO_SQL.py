@@ -1,52 +1,97 @@
 import sqlite3
-import os
+from pathlib import Path
+import sys
+from token import NAME
 
-# Get the directory of this script
-project_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Database file path
-db_path = os.path.join(project_dir, "LEGO_sql_database.db")
+def get_app_directory():
+    """
+    Returns the directory where the script or executable lives.
+    Works for both .py and PyInstaller .exe.
+    """
+    if getattr(sys, "frozen", False):  # running as packaged exe
+        return Path(sys.executable).parent
+    else:  # running as script
+        return Path(__file__).parent
 
-# Connect to the database (it will create the file if it doesn't exist)
-conn = sqlite3.connect(db_path)
-cursor = conn.cursor()
 
-cursor.execute("PRAGMA foreign_keys = ON")
+def initialize_database():
+    # Create folder next to executable
+    base_dir = get_app_directory()
+    db_folder = base_dir / "LEGO Database"
+    db_folder.mkdir(exist_ok=True)
 
-# Example: Create a table
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS Kits (
-    KitID INTEGER PRIMARY KEY,
-    Name TEXT NOT NULL,
-    Theme TEXT NOT NULL,
-    Subtheme TEXT NOT NULL
-)
-''')
+    db_path = db_folder / "lego.db"
 
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS Minifigures (
-    MinifigureID INTEGER PRIMARY KEY,
-    Name TEXT NOT NULL,
-    Variation TEXT NOT NULL,
-    Quantity INTEGER
-)
-''')
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
 
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS KitMinifigures (
-    MinifigureID INTEGER NOT NULL,
-    KitID INTERGER NOT NULL,
-    FOREIGN KEY (MinifigureID) REFERENCES Minifigures(MinifigureID)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    FOREIGN KEY (KitID) REFERENCES Kits(KitID)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-)
-''')
+    # Create tables
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS Sets (
+        set_id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        theme TEXT,
+        subtheme TEXT,
+        piece_count INTEGER,
+        minifigure_count INTEGER,
+        instruction_book_count INTEGER
+    )
+    """)
 
-# Commit and close the connection
-conn.commit()
-conn.close()
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS Minifigures (
+        fig_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        set_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        variant TEXT,
+        FOREIGN KEY(set_id) REFERENCES Sets(set_id)
+    )
+    """)
 
-print(f"Database created at: {db_path}")
+    conn.commit()
+    conn.close()
+
+    return db_path
+
+def AddToDatabase():
+
+    db_path = Path("LEGO Database") / "lego.db"
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+
+    set_id = input("Enter set ID: ")
+    name = input("Enter set name: ")
+    theme = input("Enter set theme: ")
+    subtheme = input("Enter set subtheme: ")
+    pieces = int(input("Enter number of pieces: "))
+    figs = int(input("Enter number of minifigures: "))
+    books = int(input("Enter number of instruction books: "))
+    cur.execute(
+        "INSERT INTO Sets VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (set_id, name, theme, subtheme, pieces, figs, books)
+    )
+    conn.commit()
+
+    for _ in range(figs):
+        mini_name = input("Enter Minifigure name: ")
+        variant = input("Enter Minifigure variation: ")
+        cur.execute(
+        "INSERT INTO Minifigures (set_id, name, variant) VALUES (?, ?, ?)",
+        (set_id, mini_name, variant)
+        )
+        conn.commit()
+    
+
+if __name__ == "__main__":  
+    db_path = Path("LEGO Database") / "lego.db"
+
+    if db_path.exists():
+        print("Database already exists.")
+    else:
+        print("Creating database...")
+        path = initialize_database()
+        print("Database created.")
+
+    AddToDatabase()
+    
