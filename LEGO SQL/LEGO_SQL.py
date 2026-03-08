@@ -81,8 +81,18 @@ def AddToDatabase():
         (set_id, mini_name, variant)
         )
         conn.commit()
-    
 
+def Menu():
+    while True:
+        print("LEGO SQL Database \n1: Add to database \n2: View database")
+        menuOption = input("Enter number (1-2): ")
+        if menuOption == "1":
+            AddToDatabase()
+        elif menuOption == "2":
+            print("View database goes here")
+        else:
+            print("\n\nPlease enter a valid option:\n")
+    
 if __name__ == "__main__":  
     db_path = Path("LEGO Database") / "lego.db"
 
@@ -93,5 +103,7 @@ if __name__ == "__main__":
         path = initialize_database()
         print("Database created.")
 
-    AddToDatabase()
+    Menu()
+
+    
     
