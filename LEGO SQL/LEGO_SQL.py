@@ -82,6 +82,26 @@ def AddToDatabase():
         )
         conn.commit()
 
+def viewData():
+    db_path = Path("LEGO Database") / "lego.db"
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM Sets")
+    result=cur.fetchall()
+
+    print("\n\nSets Table:")
+
+    for row in result:
+        print(row)
+
+    print("\n\nMinifigures Table:")
+
+    cur.execute("SELECT * FROM Minifigures")
+    result=cur.fetchall()
+
+    for row in result:
+        print(row)
+
 def Menu():
     while True:
         print("LEGO SQL Database \n1: Add to database \n2: View database")
@@ -89,7 +109,7 @@ def Menu():
         if menuOption == "1":
             AddToDatabase()
         elif menuOption == "2":
-            print("View database goes here")
+            viewData()
         else:
             print("\n\nPlease enter a valid option:\n")
     
