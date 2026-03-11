@@ -54,7 +54,7 @@ def initialize_database():
 
     return db_path
 
-def AddToDatabase():
+def AddNewKit():
 
     db_path = Path("LEGO Database") / "lego.db"
     conn = sqlite3.connect(db_path)
@@ -74,13 +74,20 @@ def AddToDatabase():
     conn.commit()
 
     for _ in range(figs):
-        mini_name = input("Enter Minifigure name: ")
-        variant = input("Enter Minifigure variation: ")
-        cur.execute(
+        AddMinifigure(set_id)
+
+def AddMinifigure(set_id):
+    db_path = Path("LEGO Database") / "lego.db"
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+
+    mini_name = input("Enter Minifigure name: ")
+    variant = input("Enter Minifigure variation: ")
+    cur.execute(
         "INSERT INTO Minifigures (set_id, name, variant) VALUES (?, ?, ?)",
         (set_id, mini_name, variant)
-        )
-        conn.commit()
+    )
+    conn.commit()
 
 def viewData():
     db_path = Path("LEGO Database") / "lego.db"
@@ -104,10 +111,21 @@ def viewData():
 
 def Menu():
     while True:
-        print("LEGO SQL Database \n1: Add to database \n2: View database")
+        print("LEGO SQL Database \n1: Manage database \n2: View database")
         menuOption = input("Enter number (1-2): ")
         if menuOption == "1":
-            AddToDatabase()
+            print("Manage Database:\n1: Add new kit \n2: Add new minifigure \n3: Add broken piece \n4: Back")
+            menu2Option = input("Enter number (1-4): ")
+            if menu2Option == "1":
+                AddNewKit()
+            elif menu2Option == "2":
+                AddMinifigure(input("Enter set ID: "))
+            elif menu2Option == "3":
+                print("Need to add borken pieces table")
+            elif menu2Option == "4":
+                continue
+            else:
+                print("Invalid input.\n\n\n")
         elif menuOption == "2":
             viewData()
         else:
